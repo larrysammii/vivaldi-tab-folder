@@ -22,10 +22,10 @@ Requires macOS, Vivaldi at `/Applications/Vivaldi.app`, Node.js **22+**, npm, an
    ```
 
 3. Choose or create a workspace using Vivaldi's normal workspace switcher.
-4. **Right-click anywhere in the vertical tab bar → New Folder.** Right-click a folder for **New Subfolder**, rename, move, or removal.
-5. Drag an actual native tab onto a folder. Switching workspaces switches folder trees. Click a folder to collapse it.
+4. **Right-click anywhere in the vertical tab bar → New Folder.** Type the name directly in the new row—no naming dialog. **Enter** or clicking away saves; **Escape** cancels. Right-click a folder for **New Subfolder**, inline rename, move, or removal.
+5. Drag an actual native tab over a folder: a distinct highlight shows the valid destination **before you release**. Closed folders stay closed after the drop. Switching workspaces switches folder trees.
 
-The launcher selects left-side tabs **only in `.local/workspace-profile`**. For the right side:
+The interactive trial selects left-side tabs **only in `.local/workspace-profile`**. For the right side:
 
 ```sh
 npm run try:workspace -- --side=right
@@ -35,13 +35,15 @@ The app files and normal profile stay unchanged. Loopback debugging is enabled f
 
 ## What the prototype does
 
-- Keeps the existing native tab rows, activation, and close buttons; adds folder headers to the same strip.
+- Keeps native tabs and adds folder headers to the same strip. **Inside folders:** close a loaded tab to unload its page while keeping its entry; close an unloaded entry to remove it. Opening it reloads and resets the cycle. Outside folders, close stays normal.
 - Gives each workspace an independent tree. The default/home view is scoped by persistent window identity.
 - Adds folder actions to native context menus. **Move to Folder** in the context menu is a non-drag alternative.
 - Saves hierarchy and placements locally under a separate prototype storage key. No URLs, page contents, or tab titles are copied into folder state.
 - Excludes private contexts and horizontal tab bars; unexpected native layouts fall back to the unchanged native list.
 
-Keyboard: folder buttons support **← / →** to collapse/expand, **↑ / ↓ / Home / End** navigation, **F2** to rename, and standard dialog **Tab / Escape** behavior. Native tab keyboard behavior remains owned by Vivaldi.
+The folder-only close rule applies to **×, ⌘W, middle-click and individual Close Tab**. Unloading selects Vivaldi's normal next tab, or opens a Start Page if no other tab exists. Bulk close, window close and quit stay native. [Lifecycle details and tests](docs/folder-tab-lifecycle.md).
+
+Keyboard: folder buttons support **← / →** to collapse/expand, **↑ / ↓ / Home / End** navigation, and **F2** for inline rename. Naming preserves drafts/caret across refreshes and ignores Enter during IME composition. **Escape** cancels a new row or restores the previous name; clicking away from an empty new name keeps `Untitled`. The move-parent dialog retains standard **Tab / Escape** behavior. Native tab keyboard behavior remains owned by Vivaldi.
 
 ![Workspace folders integrated into an isolated native vertical tab bar with synthetic test data](docs/images/workspace-native.png)
 
@@ -53,9 +55,11 @@ npm run check:workspace         # workspace/native-bridge tests and prototype bu
 npm run test:workspace-browser  # isolated native-UI checks
 ```
 
-The browser checks exercise real right-click, pointer, and keyboard events; native menu requests; workspace switching; nested collapse; native tab activation/close; private exclusion; both vertical sides; fallback; reinjection; and cleanup. They verify the installed app's vendor signature remains valid.
+Automated checks use **`.local/workspace-qa-profile`**, separate from the interactive trial. They exercise real right-click, pointer, and keyboard events; inline naming and draft preservation; valid drop feedback; workspace/nesting behavior; and the same-tab **+ → navigation/title update → folder drag → unload → remove** workflow. Separate lifecycle checks cover reopening, automatically unloaded tabs, native context commands, queued closes, focus and the last-tab Start Page. Private exclusion, both vertical sides, fallback, reinjection, cleanup, and the installed app's vendor signature are checked too.
 
 **Automation intercepts platform-menu selection and OS drag start.** It then routes the actual native menu command and serialized tab-drop payload through the prototype and Vivaldi's drop consumer. This avoids an OS drag loop that CDP cannot reliably control. It is not a claim of full physical-mouse/platform-menu verification, process-restart persistence, performance at large tab counts, or production readiness.
+
+**Use a named workspace for the current trial.** A Home/default-view diagnostic hit a native rendering mismatch even with the mod disabled, so the new close lifecycle is not verified there.
 
 Native stacks and other complex tab layouts are not fully supported; unknown rows pause the projection rather than being replaced. Other Vivaldi versions/platforms, browser Sync, archives/saved closed links, and automatic migration from the old sidebar are not implemented. See [prototype details](docs/workspace-prototype.md).
 

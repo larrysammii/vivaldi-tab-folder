@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 // Only connect to the throwaway profile created by this project.
 export async function targets(profile = 'test-profile') {
-  if (!['test-profile', 'workspace-profile'].includes(profile)) throw new Error('Only project-owned test profiles are supported');
+  if (!['test-profile', 'workspace-profile', 'workspace-qa-profile'].includes(profile)) throw new Error('Only project-owned test profiles are supported');
   const [portText, browserPath] = (await readFile(resolve('.local', profile, 'DevToolsActivePort'), 'utf8')).trim().split('\n');
   const port = Number(portText);
   if (!Number.isInteger(port) || port < 1 || port > 65535 || !browserPath?.startsWith('/devtools/browser/')) throw new Error('Invalid isolated-profile debugging endpoint');

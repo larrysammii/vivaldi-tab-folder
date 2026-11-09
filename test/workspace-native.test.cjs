@@ -61,6 +61,52 @@ test('native serialized drops validate the full schema and forward only canonica
   assert.equal(N.nativeTabDrop(null), null);
 });
 
+test('native drag sessions validate selections and return defensive snapshots', () => {
+  const received = [], fallbacks = [];
+  const original = function (...args) { fallbacks.push({ receiver: this, args }); return 'native-result'; };
+  const controller = {
+    state: { dragMode: 'internal', draggedPages: { toArray: () => [{ id: 7 }, { id: 8 }] } },
+    endInternalDragging: original,
+    cleanupDragging() {},
+  };
+  const strip = { '__reactFiber$test': { stateNode: null, return: { stateNode: controller } } };
+  const hook = N.hookDragController(strip, ids => { received.push(ids); return false; });
+
+  const first = hook.session(), second = hook.session();
+  assert.deepEqual(first, { mode: 'internal', ids: [7, 8] });
+  assert.notEqual(first, second); assert.notEqual(first.ids, second.ids);
+  first.ids[0] = 99;
+  assert.deepEqual(hook.session().ids, [7, 8]);
+
+  controller.state = { dragMode: 'native', draggedPages: [{ id: 8 }, { id: 7 }] };
+  assert.deepEqual(hook.session(), { mode: 'native', ids: [8, 7] });
+  controller.state = { dragMode: 'detached', draggedPages: [{ id: 7 }] };
+  assert.deepEqual(hook.session(), { mode: 'detached', ids: [7] });
+
+  for (const draggedPages of [
+    [], [{ id: 7 }, { id: 7 }], [{ id: 0 }], [{ id: -1 }], [{ id: '7' }], [{ id: NaN }],
+    [{ id: Number.MAX_SAFE_INTEGER + 1 }], [null], {}, { toArray: () => ({}) }, { toArray: () => { throw new Error('unreadable'); } },
+  ]) {
+    controller.state = { dragMode: 'internal', draggedPages };
+    assert.equal(hook.session(), null);
+  }
+  controller.state = { dragMode: 'internal', get draggedPages() { throw new Error('unreadable'); } };
+  assert.equal(hook.session(), null); assert.equal(hook.isDragging(), true);
+  controller.state = { dragMode: null, draggedPages: [{ id: 7 }] };
+  assert.equal(hook.session(), null); assert.equal(hook.isDragging(), false);
+
+  const receiver = { state: { dragMode: 'internal', draggedPages: [{ id: 7 }, { id: 7 }] } };
+  assert.equal(controller.endInternalDragging.call(receiver, 'fallback-arg'), 'native-result');
+  controller.state = { dragMode: 'detached', draggedPages: [{ id: 7 }] };
+  assert.equal(controller.endInternalDragging.call(controller, 'detached-arg'), 'native-result');
+  assert.deepEqual(fallbacks, [
+    { receiver, args: ['fallback-arg'] },
+    { receiver: controller, args: ['detached-arg'] },
+  ]);
+  assert.deepEqual(received, []);
+  hook.restore();
+});
+
 test('native drag hook handles actual dragged page IDs and uses native cleanup', () => {
   let nativeEnded = 0, cleaned = 0, accepted = true, received;
   const original = function () { nativeEnded++; };

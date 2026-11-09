@@ -1,4 +1,4 @@
-/* Small, reversible bridges to the version-checked native menu and drag engines. */
+/* Reversible bridges to version-checked native menu, drag and tab-close engines. */
 (function (root, factory) {
   const value = factory();
   if (root) root.ArcWorkspaceNative = value;
@@ -18,22 +18,84 @@
     if (!controller) return null;
     const original = controller.endInternalDragging;
     let restored = false;
+    function dragSession(source) {
+      try {
+        const state = source?.state;
+        const mode = state?.dragMode;
+        if (!mode) return null;
+        const collection = state.draggedPages;
+        const pages = Array.isArray(collection) ? collection : collection?.toArray?.();
+        if (!Array.isArray(pages) || !pages.length) return null;
+        const ids = [], seen = new Set();
+        for (const page of pages) {
+          if (!page || typeof page !== 'object' || Array.isArray(page)) return null;
+          const id = page.id;
+          if (!Number.isSafeInteger(id) || id <= 0 || seen.has(id)) return null;
+          seen.add(id); ids.push(id);
+        }
+        return { mode, ids };
+      } catch { return null; }
+    }
     function wrapped(...args) {
-      const state = this.state;
-      if (state?.dragMode && state.dragMode !== 'detached') {
-        const pages = state.draggedPages?.toArray?.() || (Array.isArray(state.draggedPages) ? state.draggedPages : []);
-        const ids = pages.map(page => page.id).filter(Number.isSafeInteger);
-        if (ids.length && onDrop(ids)) { this.cleanupDragging(); return; }
-      }
+      const session = dragSession(this);
+      if (session && session.mode !== 'detached' && onDrop(session.ids)) { this.cleanupDragging(); return; }
       return original.apply(this, args);
     }
     controller.endInternalDragging = wrapped;
     return {
       controller,
       isDragging: () => !!controller.state?.dragMode,
+      session: () => dragSession(controller),
       restore() {
         if (restored) return; restored = true;
         if (controller.endInternalDragging === wrapped) controller.endInternalDragging = original;
+      },
+    };
+  }
+  function hookTabClose(actions, { targetFor, getTab, unload, onError = () => {} }) {
+    const names = ['closePage', 'closePageById'];
+    if (!actions || !names.every(name => typeof actions[name] === 'function' && Object.getOwnPropertyDescriptor(actions, name)?.writable) || ![targetFor, getTab, unload].every(value => typeof value === 'function')) return null;
+    const original = new Map(names.map(name => [name, actions[name]])), pending = new Map(), wrappers = new Map();
+    let restored = false;
+    function singleId(value) {
+      try {
+        const page = Array.isArray(value) ? (value.length === 1 ? value[0] : null) : value?.size === 1 && typeof value.first === 'function' ? value.first() : value;
+        return Number.isSafeInteger(page?.id) && page.id > 0 ? page.id : null;
+      } catch { return null; }
+    }
+    function request(id, invoke) {
+      if (restored) return Promise.resolve();
+      if (!Number.isSafeInteger(id) || id <= 0) return invoke(id);
+      let target;
+      try { target = targetFor(id); } catch (error) { onError(error); return Promise.resolve(); }
+      if (!target) return invoke(id);
+      const current = () => !restored && targetFor(id, target) === target;
+      const task = (pending.get(target) || Promise.resolve()).then(async () => {
+        if (!current()) return;
+        const tab = await getTab(id, target);
+        if (!tab || !current()) return;
+        // Serialize by persistent entry, not a transient ID that discard replaces.
+        if (tab.discarded) return invoke(tab.id);
+        await unload(tab, current);
+      }).catch(onError);
+      pending.set(target, task);
+      const settled = () => { if (pending.get(target) === task) pending.delete(target); };
+      task.then(settled, settled);
+      return task;
+    }
+    for (const name of names) {
+      function wrapped(...args) {
+        if (restored) return original.get(name).apply(this, args);
+        const id = name === 'closePageById' ? args[0] : singleId(args[0]);
+        return request(id, liveId => liveId === id ? original.get(name).apply(this, args) : original.get('closePageById').call(actions, liveId));
+      }
+      actions[name] = wrapped; wrappers.set(name, wrapped);
+    }
+    return {
+      close(id) { return request(id, liveId => original.get('closePageById').call(actions, liveId)); },
+      restore() {
+        if (restored) return; restored = true;
+        for (const name of names) if (actions[name] === wrappers.get(name)) actions[name] = original.get(name);
       },
     };
   }
@@ -122,5 +184,5 @@
       },
     };
   }
-  return Object.freeze({ findDragController, hookDragController, menuBridge, TAB_MIME, nativeTabDrop });
+  return Object.freeze({ findDragController, hookDragController, hookTabClose, menuBridge, TAB_MIME, nativeTabDrop });
 });

@@ -2,12 +2,18 @@
 .awf-strip { height: var(--awf-height) !important; min-height: var(--awf-height) !important; }
 .awf-scroll-host { max-height: none !important; flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; }
 .awf-tab-row { transform: translate(var(--PositionX, 0px), var(--awf-y)) !important; }
+.awf-tab-row.awf-dragging { transform: translate(var(--PositionX, 0px), var(--awf-drag-y)) !important; pointer-events: none; }
 .awf-tab-row > .tab-wrapper .tab-header { padding-inline-start: calc(6px + var(--awf-indent, 0px)) !important; }
 .awf-tab-row.awf-hidden { display: none !important; }
 .awf-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .awf-folder { position: absolute; inset-inline: 0; display: flex; align-items: center; padding-inline: 3px; color: var(--colorFg, #ddd); pointer-events: auto; background: var(--colorBg, #292929); border-radius: var(--radius, 4px); }
 .awf-folder:hover { background: var(--colorBgLight, #353535); }
+.awf-folder.awf-drop-target { outline: 2px solid var(--colorHighlightBg, #6d94ff); outline-offset: -2px; }
 .awf-folder-toggle { display: flex; flex: 1; min-width: 0; height: 100%; align-items: center; gap: 6px; text-align: start; padding: 0 5px; color: inherit; border: 0; background: transparent; font: inherit; cursor: default; }
+.awf-folder-toggle[hidden] { display: none; }
+.awf-name-input { display: block; flex: 1; min-width: 0; width: 100%; height: calc(100% - 4px); margin: 2px 4px; padding: 2px 5px; border: 1px solid var(--colorHighlightBg, #6d94ff); border-radius: var(--radius, 4px); color: var(--colorFg, #ddd); background: var(--colorBgDark, #222); font: inherit; outline: 1px solid var(--colorHighlightBg, #6d94ff); outline-offset: 0; }
+.awf-name-input[aria-invalid="true"] { border-color: var(--colorError, #ffb4ab); outline-color: var(--colorError, #ffb4ab); }
+.awf-name-input[readonly] { opacity: .75; }
 .awf-folder-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .awf-folder-count { margin-inline-start: auto; opacity: .65; padding-inline: 8px; font-size: 11px; }
 .awf-folder button:focus-visible, .awf-dialog :focus-visible { outline: 2px solid var(--colorHighlightBg, #6d94ff); outline-offset: -2px; }

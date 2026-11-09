@@ -36,9 +36,13 @@ test('destroy is idempotent and releases the native store listener exactly once'
     ArcFoldersModel: M,
     ArcWorkspaceLayout: {}, ArcWorkspaceNative: N,
     console: { warn() {} },
-    chrome: { extension: { getViews() { return []; } }, tabs: { query: async () => [] }, windows: { getAll: async () => [] }, storage: { local: { get: async () => ({}) } } },
+    chrome: { extension: { getViews() { return []; } }, tabs: { query: async () => [], discard: async () => {} }, windows: { getAll: async () => [] }, storage: { local: { get: async () => ({}) } } },
     vivaldi: { prefs: { get: async () => ({ value: 'left' }) }, contextMenu: { show() {} }, menubarMenu: { onAction: { addListener() {}, removeListener() {} }, onClose: { addListener() {}, removeListener() {} } } },
-    webpackChunkgapp_browser_react: { push([, , callback]) { callback(() => ({ Z: store })); } },
+    webpackChunkgapp_browser_react: { push([, , callback]) { callback(id => ({
+      61685: { Z: store },
+      67251: { ZP: { closePage() {}, closePageById() {}, activateTab() {} } },
+      70406: { ZP: { getPageById() {}, getStartpage() {} }, yz() {} },
+    })[id]); } },
     setInterval() { return 1; }, clearInterval() {}, setTimeout() { return 1; }, clearTimeout() {},
   });
   vm.runInContext(source, context);
