@@ -1,0 +1,24 @@
+/* Original native rows, with a reversible workspace-folder projection. No extra toolbar. */
+.awf-strip { height: var(--awf-height) !important; min-height: var(--awf-height) !important; }
+.awf-scroll-host { max-height: none !important; flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; }
+.awf-tab-row { transform: translate(var(--PositionX, 0px), var(--awf-y)) !important; }
+.awf-tab-row > .tab-wrapper .tab-header { padding-inline-start: calc(6px + var(--awf-indent, 0px)) !important; }
+.awf-tab-row.awf-hidden { display: none !important; }
+.awf-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.awf-folder { position: absolute; inset-inline: 0; display: flex; align-items: center; padding-inline: 3px; color: var(--colorFg, #ddd); pointer-events: auto; background: var(--colorBg, #292929); border-radius: var(--radius, 4px); }
+.awf-folder:hover { background: var(--colorBgLight, #353535); }
+.awf-folder-toggle { display: flex; flex: 1; min-width: 0; height: 100%; align-items: center; gap: 6px; text-align: start; padding: 0 5px; color: inherit; border: 0; background: transparent; font: inherit; cursor: default; }
+.awf-folder-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.awf-folder-count { margin-inline-start: auto; opacity: .65; padding-inline: 8px; font-size: 11px; }
+.awf-folder button:focus-visible, .awf-dialog :focus-visible { outline: 2px solid var(--colorHighlightBg, #6d94ff); outline-offset: -2px; }
+.awf-sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.awf-dialog { color: var(--colorFg, #ddd); background: var(--colorBg, #292929); border: 1px solid var(--colorBorder, #666); border-radius: 8px; padding: 18px; width: min(370px, calc(100vw - 32px)); box-shadow: 0 12px 36px #0006; }
+.awf-dialog::backdrop { background: #0005; }
+.awf-dialog h2 { font: 600 15px/1.4 system-ui, sans-serif; margin: 0 0 14px; }
+.awf-dialog label { display: block; margin-block: 10px; }
+.awf-dialog input, .awf-dialog select { display: block; width: 100%; min-height: 34px; margin-top: 6px; color: inherit; background: var(--colorBgDark, #222); border: 1px solid var(--colorBorder, #666); border-radius: 4px; padding: 6px; font: inherit; }
+.awf-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.awf-dialog button { min-height: 32px; padding: 5px 12px; color: inherit; background: var(--colorBgLight, #444); border: 1px solid var(--colorBorder, #666); border-radius: 4px; font: inherit; }
+.awf-dialog .awf-primary { color: var(--colorHighlightFg, #fff); background: var(--colorHighlightBg, #4867cb); }
+.awf-dialog .awf-dialog-error { color: var(--colorError, #ffb4ab); font-size: 12px; min-height: 1em; }
+@media (prefers-reduced-motion: reduce) { .awf-tab-row { transition: none !important; } }

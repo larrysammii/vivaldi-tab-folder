@@ -1,10 +1,14 @@
-# Installation and rollback
+# Legacy installation and rollback
+
+> **This installer is for the old window-wide standalone sidebar only.** It does not install the [workspace-native prototype](workspace-prototype.md). Use `npm run try` for that isolated, in-memory prototype; keep the normal app unpatched.
+>
+> The trial commands in this legacy guide use `npm run try:legacy` and `.local/test-profile`. The new default trial instead uses `.local/workspace-profile`.
 
 ## Choose the correct mode
 
 | Mode | Load command | Changes app files? | Survives normal app relaunch? |
 | --- | --- | --- | --- |
-| Isolated trial | `npm run try` | No | **No.** Run the command again; only folder data is retained in the test profile |
+| Isolated legacy trial | `npm run try:legacy` | No | **No.** Run the command again; only folder data is retained in the test profile |
 | Persistent UI hook | Explicit installer command below | **Yes** | Intended to load on startup until an update replaces the hook; signed-app launch compatibility is not yet verified |
 
 The trial uses `.local/test-profile`. Your regular Vivaldi uses its own profile. Folder data does not move between them automatically.
@@ -110,7 +114,7 @@ If uninstall refuses because files or the app version changed, **do not overwrit
 
 | Symptom | Meaning / next action |
 | --- | --- |
-| Sidebar disappeared after quitting a trial | Expected: run `npm run try` again, or deliberately choose the persistent hook |
+| Legacy sidebar disappeared after quitting a trial | Expected: run `npm run try:legacy` again, or deliberately choose the legacy persistent hook |
 | Trial folder data missing in normal Vivaldi | Different profiles; no automatic migration is implemented |
 | Installer reports app running | Quit every instance of that app, not just the active window |
 | Installer reports untested version | Stop; compatibility must be checked before supporting a new version |

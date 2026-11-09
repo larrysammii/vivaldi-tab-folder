@@ -8,7 +8,7 @@
 
 ## Safety boundaries
 
-- Develop against the project-owned `.local/test-profile`, not a daily browsing profile. Do not sign into Sync there.
+- Develop against project-owned `.local/workspace-profile` (current prototype) or `.local/test-profile` (legacy), not a daily browsing profile. Do not sign into Sync there.
 - Do not patch `/Applications/Vivaldi.app` just to test a change. In-memory loading is the normal development path.
 - Never add Vivaldi bundles/binaries, profiles, cookies, raw logs, HARs, credentials, or REA evidence bundles to a contribution.
 - Preserve native tab controls, private-window exclusion, local-only state, and the distinction between temporary injection and persistent installation.
@@ -18,12 +18,14 @@
 
 ```sh
 npm run check
+npm run check:workspace
 npm run try
-npm run test:vivaldi
-npm run test:lifecycle
+npm run test:workspace-browser
 ```
 
-The lifecycle test closes and relaunches only the isolated test process. Browser tests restore their temporary folder state, but the profile is intentionally disposable. Pure tests run in CI; real Vivaldi tests require macOS and the locally installed browser.
+The workspace browser suite intercepts platform-menu selection and OS drag start, then exercises the native command/drop paths. Physical-mouse platform behavior still needs a manual check; see [prototype boundaries](docs/workspace-prototype.md#test-evidence-boundary).
+
+Legacy checks remain available as `npm run try:legacy`, `npm run test:vivaldi`, and `npm run test:lifecycle`. The legacy lifecycle test closes and relaunches only its isolated test process. Browser tests restore their temporary folder state, but the profile is intentionally disposable. Pure tests run in CI; real Vivaldi tests require macOS and the locally installed browser.
 
 Add model tests for hierarchy, normalization, ordering, and safety invariants. Add installer tests for file ownership, refusing unexpected changes, and exact-byte rollback. UI changes should be checked with pointer input and keyboard navigation, including modal Escape/focus restoration and interruption/reload behavior.
 

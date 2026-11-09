@@ -2,7 +2,7 @@
   "name": "vivaldi-tab-folder",
   "version": "0.1.0",
   "private": true,
-  "description": "Experimental nested tab folders for Vivaldi desktop on macOS",
+  "description": "Experimental workspace-native tab folders for Vivaldi on macOS",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -14,11 +14,17 @@
   },
   "scripts": {
     "build": "node tools/build.mjs",
+    "build:workspace": "node tools/build-workspace.mjs",
+    "check:workspace": "node --check src/workspace-layout.js && node --check src/workspace-native.js && node --check src/workspace-folders.js && node --check tools/launch-workspace.mjs && npm run test:workspace && npm run build:workspace",
+    "test:workspace": "node --test test/workspace-*.test.cjs",
+    "try:workspace": "npm run build:workspace && node tools/launch-workspace.mjs",
+    "test:workspace-browser": "npm run build:workspace && node tools/workspace-smoke.mjs",
     "test": "node --test test/*.test.cjs && python3 -m unittest discover -s test -p 'test_*.py'",
-    "check": "node --check src/model.js && node --check src/sidebar.js && npm test && npm run build",
+    "check": "node --check src/model.js && node --check src/sidebar.js && npm test && npm run build && npm run build:workspace",
     "test:vivaldi": "node tools/smoke.mjs",
     "test:lifecycle": "node tools/lifecycle.mjs",
-    "try": "npm run build && node tools/launch-test.mjs"
+    "try": "npm run try:workspace",
+    "try:legacy": "npm run build && node tools/launch-test.mjs"
   },
   "engines": { "node": ">=22" }
 }

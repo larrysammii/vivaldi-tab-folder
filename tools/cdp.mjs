@@ -2,8 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 // Only connect to the throwaway profile created by this project.
-export async function targets() {
-  const [portText, browserPath] = (await readFile(resolve('.local/test-profile/DevToolsActivePort'), 'utf8')).trim().split('\n');
+export async function targets(profile = 'test-profile') {
+  if (!['test-profile', 'workspace-profile'].includes(profile)) throw new Error('Only project-owned test profiles are supported');
+  const [portText, browserPath] = (await readFile(resolve('.local', profile, 'DevToolsActivePort'), 'utf8')).trim().split('\n');
   const port = Number(portText);
   if (!Number.isInteger(port) || port < 1 || port > 65535 || !browserPath?.startsWith('/devtools/browser/')) throw new Error('Invalid isolated-profile debugging endpoint');
   const base = `http://127.0.0.1:${port}`;
@@ -13,8 +14,8 @@ export async function targets() {
   return response.json();
 }
 
-export async function connect(suffix = '/main.html', targetId = null) {
-  const candidates = (await targets()).filter(t => t.url === `chrome-extension://mpognobbkildjkofajifpdfhcoklimli${suffix}` && (!targetId || t.id === targetId));
+export async function connect(suffix = '/main.html', targetId = null, profile = 'test-profile') {
+  const candidates = (await targets(profile)).filter(t => t.url === `chrome-extension://mpognobbkildjkofajifpdfhcoklimli${suffix}` && (!targetId || t.id === targetId));
   for (const target of candidates) {
     const client = await connectSocket(target.webSocketDebuggerUrl);
     if (suffix === '/main.html') {

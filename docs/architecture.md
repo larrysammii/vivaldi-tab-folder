@@ -1,4 +1,6 @@
-# How the mod works
+# How the legacy sidebar works
+
+> This page documents the earlier window-wide sidebar, retained for regression checks. The default trial now uses the [workspace-native prototype](workspace-prototype.md), not this standalone panel.
 
 ## Boundaries
 
